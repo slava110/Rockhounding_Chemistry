@@ -1016,3 +1016,15 @@ label.rockhounding_chemistry:descr.speed=Speed Upgrade
 label.rockhounding_chemistry:descr.refractory=Refractory Upgrade
 label.rockhounding_chemistry:descr.insulation=Insulation Upgrade
 label.rockhounding_chemistry:descr.casing=Casing Upgrade
+
+#### TOOLTIPS ####
+tooltip.samplingampoule.empty=§7Sample: §l§bEmpty
+tooltip.samplingampoule.gas=§7Sampled Gas: §l§b%s
+tooltip.samplingampoule.fluid=§7Sampled Fluid: §l§b%s
+
+tooltip.speed_items=§aIncreases the machine speed by %s
+
+tooltip.filter_items.0=§aThickens the leaching filter mesh by %s
+tooltip.filter_items.1=§aSets the filter step to %s
+
+tooltip.probe_items=§aIncreases the Orbiter radius to %s block/s

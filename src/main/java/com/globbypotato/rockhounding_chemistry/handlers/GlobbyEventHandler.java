@@ -4,46 +4,29 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import com.globbypotato.rockhounding_chemistry.ModBlocks;
-import com.globbypotato.rockhounding_chemistry.ModItems;
 import com.globbypotato.rockhounding_chemistry.enums.EnumMiscBlocksA;
-import com.globbypotato.rockhounding_chemistry.enums.EnumMiscItems;
 import com.globbypotato.rockhounding_chemistry.enums.machines.EnumMachinesB;
 import com.globbypotato.rockhounding_chemistry.enums.machines.EnumMachinesD;
-import com.globbypotato.rockhounding_chemistry.enums.materials.EnumElements;
-import com.globbypotato.rockhounding_chemistry.enums.utils.EnumCasting;
-import com.globbypotato.rockhounding_chemistry.enums.utils.EnumServer;
-import com.globbypotato.rockhounding_chemistry.enums.utils.EnumSpeeds;
 import com.globbypotato.rockhounding_chemistry.fluids.ModFluids;
-import com.globbypotato.rockhounding_chemistry.items.ProbeItems;
 import com.globbypotato.rockhounding_chemistry.machines.io.MachineIO;
-import com.globbypotato.rockhounding_chemistry.machines.recipe.BedReactorRecipes;
 import com.globbypotato.rockhounding_chemistry.machines.recipe.ChemicalExtractorRecipes;
-import com.globbypotato.rockhounding_chemistry.machines.recipe.DepositionChamberRecipes;
-import com.globbypotato.rockhounding_chemistry.machines.recipe.GasReformerRecipes;
-import com.globbypotato.rockhounding_chemistry.machines.recipe.LabOvenRecipes;
 import com.globbypotato.rockhounding_chemistry.machines.recipe.LeachingVatRecipes;
-import com.globbypotato.rockhounding_chemistry.machines.recipe.MetalAlloyerRecipes;
 import com.globbypotato.rockhounding_chemistry.machines.recipe.MineralSizerRecipes;
-import com.globbypotato.rockhounding_chemistry.machines.recipe.PrecipitationRecipes;
 import com.globbypotato.rockhounding_chemistry.machines.recipe.RetentionVatRecipes;
 import com.globbypotato.rockhounding_chemistry.machines.recipe.construction.ChemicalExtractorRecipe;
 import com.globbypotato.rockhounding_chemistry.machines.recipe.construction.LeachingVatRecipe;
 import com.globbypotato.rockhounding_chemistry.machines.recipe.construction.MineralSizerRecipe;
 import com.globbypotato.rockhounding_chemistry.machines.recipe.construction.RetentionVatRecipe;
-import com.globbypotato.rockhounding_chemistry.utils.BaseRecipes;
 import com.globbypotato.rockhounding_chemistry.utils.ModUtils;
 import com.globbypotato.rockhounding_core.enums.EnumFluidNbt;
 import com.globbypotato.rockhounding_core.utils.CoreUtils;
-import com.google.common.base.Strings;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityXPOrb;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
-import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
@@ -67,20 +50,7 @@ public class GlobbyEventHandler {
 	public void handleTooltip(ItemTooltipEvent event){
 		ItemStack itemstack = event.getItemStack();
 		if(itemstack != ItemStack.EMPTY){
-
-			if(itemstack.getItem() == ModItems.SPEED_ITEMS && itemstack.getItemDamage() > 0){
-				event.getToolTip().add(TextFormatting.GREEN + "Increases the machine speed by " + (itemstack.getItemDamage() + 1));
-			}
-
-			if(itemstack.getItem() == ModItems.FILTER_ITEMS && itemstack.getItemDamage() > 0){
-				event.getToolTip().add(TextFormatting.GREEN + "Thickens the leaching filter mesh by " + (itemstack.getItemDamage() * 0.5F));
-				event.getToolTip().add(TextFormatting.GREEN + "Sets the filter step to " + ModUtils.stepDivision(itemstack.getItemDamage()));
-			}
-
-			if(itemstack.getItem() == ModItems.PROBE_ITEMS){
-				event.getToolTip().add(TextFormatting.GREEN + "Increases the Orbiter radius to " + ProbeItems.orbiterUpgrade(itemstack) + " block/s");
-			}
-
+			// TODO optimize recipe lookup (integrated server loading process slowed down by this in big modpacks)
 	    	for(MineralSizerRecipe recipe : MineralSizerRecipes.mineral_sizer_recipes){
 		    	for(int y = 0; y < recipe.getOutput().size(); y++){
 					if(ItemStack.areItemsEqual(recipe.getOutput().get(y), itemstack)){
@@ -131,24 +101,6 @@ public class GlobbyEventHandler {
 	    	}
 
 			if(itemstack.hasTagCompound()){
-				if(itemstack.isItemEqual(BaseRecipes.sampling_ampoule)){
-					NBTTagCompound tag = itemstack.getTagCompound();
-					if(tag.hasKey(EnumFluidNbt.GAS.nameTag())){
-						String sampleText = TextFormatting.GRAY + "Sample: " + TextFormatting.BOLD + TextFormatting.AQUA + "Empty";
-						FluidStack sampledGas = FluidStack.loadFluidStackFromNBT(itemstack.getTagCompound().getCompoundTag(EnumFluidNbt.GAS.nameTag()));
-						if(sampledGas != null && sampledGas.getFluid() != null && sampledGas.getFluid().isGaseous()){
-							sampleText = TextFormatting.GRAY + "Sampled Gas: " + TextFormatting.BOLD + TextFormatting.AQUA + sampledGas.getLocalizedName();
-							event.getToolTip().add(sampleText);
-						}
-					}else if(tag.hasKey(EnumFluidNbt.FLUID.nameTag())){
-						String sampleText = TextFormatting.GRAY + "Sample: " + TextFormatting.BOLD + TextFormatting.AQUA + "Empty";
-						FluidStack sampledGas = FluidStack.loadFluidStackFromNBT(itemstack.getTagCompound().getCompoundTag(EnumFluidNbt.FLUID.nameTag()));
-						if(sampledGas != null && sampledGas.getFluid() != null){
-							sampleText = TextFormatting.GRAY + "Sampled Fluid: " + TextFormatting.BOLD + TextFormatting.AQUA + sampledGas.getLocalizedName();
-							event.getToolTip().add(sampleText);
-						}
-					}
-				}
 
 				if(itemstack.isItemEqual(new ItemStack(ModBlocks.MACHINES_D, 1, EnumMachinesD.ORBITER.ordinal()))){
 					NBTTagCompound tag = itemstack.getTagCompound();
@@ -160,81 +112,6 @@ public class GlobbyEventHandler {
 						}
 					}
 				}
-
-				if(itemstack.isItemEqual(new ItemStack(ModItems.MISC_ITEMS, 1, EnumMiscItems.SERVER_FILE.ordinal()))){
-					if(itemstack.hasTagCompound()){
-						NBTTagCompound tag = itemstack.getTagCompound();
-			    		if(isValidNBT(tag)){
-				        	int device = tag.getInteger("Device");
-				        	boolean cycle = tag.getBoolean("Cycle");
-				        	int recipe = tag.getInteger("Recipe");
-				        	int amount = tag.getInteger("Amount");
-				        	int done = tag.getInteger("Done");
-			        		event.getToolTip().add(TextFormatting.GRAY + "Served Device: " + TextFormatting.BOLD + TextFormatting.YELLOW + EnumServer.values()[device].getName());
-			        		event.getToolTip().add(TextFormatting.GRAY + "Repeatable: " + TextFormatting.BOLD + TextFormatting.YELLOW + cycle);
-			        		if(device == EnumServer.LAB_OVEN.ordinal()){
-			        			if(Strings.isNullOrEmpty(LabOvenRecipes.lab_oven_recipes.get(recipe).getRecipeName())){
-					        		event.getToolTip().add(TextFormatting.GRAY + "Recipe: " + TextFormatting.BOLD +  TextFormatting.YELLOW + LabOvenRecipes.lab_oven_recipes.get(recipe).getSolution().getLocalizedName());
-			        			}else{
-					        		event.getToolTip().add(TextFormatting.GRAY + "Recipe: " + TextFormatting.BOLD +  TextFormatting.YELLOW + LabOvenRecipes.lab_oven_recipes.get(recipe).getRecipeName());
-			        			}
-			        		}else if(device == EnumServer.METAL_ALLOYER.ordinal()){
-				        		event.getToolTip().add(TextFormatting.GRAY + "Recipe: " + TextFormatting.BOLD +  TextFormatting.YELLOW + MetalAlloyerRecipes.metal_alloyer_recipes.get(recipe).getOutput().getDisplayName());
-			        		}else if(device == EnumServer.DEPOSITION.ordinal()){
-				        		event.getToolTip().add(TextFormatting.GRAY + "Recipe: " + TextFormatting.BOLD +  TextFormatting.YELLOW + DepositionChamberRecipes.deposition_chamber_recipes.get(recipe).getOutput().getDisplayName());
-			        		}else if(device == EnumServer.SIZER.ordinal()){
-				        		event.getToolTip().add(TextFormatting.GRAY + "Comminution Level: " + TextFormatting.BOLD +  TextFormatting.YELLOW + recipe);
-			        		}else if(device == EnumServer.LEACHING.ordinal()){
-			        			float currentGravity = (recipe * 2) + 2F;
-			        			event.getToolTip().add(TextFormatting.GRAY + "Gravity: " + TextFormatting.BOLD +  TextFormatting.YELLOW + (currentGravity - 2F) + " to " + (currentGravity + 2F));
-			        		}else if(device == EnumServer.RETENTION.ordinal()){
-			        			float currentGravity = (recipe * 2) + 2F;
-				        		event.getToolTip().add(TextFormatting.GRAY + "Gravity: " + TextFormatting.BOLD +  TextFormatting.YELLOW + (currentGravity - 2F) + " to " + (currentGravity + 2F));
-			        		}else if(device == EnumServer.CASTING.ordinal()){
-				        		event.getToolTip().add(TextFormatting.GRAY + "Pattern: " + TextFormatting.BOLD +  TextFormatting.YELLOW + EnumCasting.getFormalName(recipe));
-			        		}else if(device == EnumServer.REFORMER.ordinal()){
-				        		event.getToolTip().add(TextFormatting.GRAY + "Recipe: " + TextFormatting.BOLD +  TextFormatting.YELLOW + GasReformerRecipes.gas_reformer_recipes.get(recipe).getOutput().getLocalizedName());
-			        		}else if(device == EnumServer.EXTRACTOR.ordinal()){
-				        		event.getToolTip().add(TextFormatting.GRAY + "Intensity Level: " + TextFormatting.BOLD +  TextFormatting.YELLOW + recipe);
-			        		}else if(device == EnumServer.PRECIPITATOR.ordinal()){
-			        			if(Strings.isNullOrEmpty(PrecipitationRecipes.precipitation_recipes.get(recipe).getRecipeName())){
-					        		event.getToolTip().add(TextFormatting.GRAY + "Recipe: " + TextFormatting.BOLD +  TextFormatting.YELLOW + PrecipitationRecipes.precipitation_recipes.get(recipe).getSolution().getLocalizedName());
-			        			}else{
-					        		event.getToolTip().add(TextFormatting.GRAY + "Recipe: " + TextFormatting.BOLD +  TextFormatting.YELLOW + PrecipitationRecipes.precipitation_recipes.get(recipe).getRecipeName());
-			        			}
-			        		}else if(device == EnumServer.BED_REACTOR.ordinal()){
-				        		event.getToolTip().add(TextFormatting.GRAY + "Recipe: " + TextFormatting.BOLD +  TextFormatting.YELLOW + BedReactorRecipes.bed_reactor_recipes.get(recipe).getOutput().getLocalizedName());
-			        		}
-			        		if(tag.hasKey("FilterStack")){
-			        			ItemStack filter = new ItemStack(tag.getCompoundTag("FilterStack"));
-			        			if(!filter.isEmpty()){
-					        		event.getToolTip().add(TextFormatting.GRAY + "Filter: " + TextFormatting.BOLD +  TextFormatting.DARK_GREEN + filter.getDisplayName());
-			        			}
-			        		}
-			        		if(tag.hasKey("FilterFluid")){
-								FluidStack filter = FluidStack.loadFluidStackFromNBT(tag.getCompoundTag("FilterFluid"));
-			        			if(filter != null){
-					        		event.getToolTip().add(TextFormatting.GRAY + "Filter: " + TextFormatting.BOLD +  TextFormatting.DARK_GREEN + filter.getLocalizedName());
-			        			}
-			        		}
-			        		event.getToolTip().add(TextFormatting.GRAY + "Amount: " + TextFormatting.BOLD +  TextFormatting.YELLOW + amount + " scheduled");
-			        		event.getToolTip().add(TextFormatting.GRAY + "Process: " + TextFormatting.BOLD +  TextFormatting.YELLOW + done + " to do");
-			    		}
-					}
-		    	}
-
-		    	if(itemstack.isItemEqual(new ItemStack(ModItems.SPEED_ITEMS, 1, EnumSpeeds.BASE.ordinal()))){
-		    		if(itemstack.getTagCompound().hasKey("Title")){
-		    			event.getToolTip().add(itemstack.getTagCompound().getString("Title"));
-		    		}
-		    		if(itemstack.getTagCompound().hasKey("DustList")){
-		    			NBTTagList dustList = itemstack.getTagCompound().getTagList("DustList", Constants.NBT.TAG_COMPOUND);
-		    			for(int i = 0; i < dustList.tagCount(); i++){
-		    				NBTTagCompound getQuantities = dustList.getCompoundTagAt(i);
-		    				event.getToolTip().add(getQuantities.getString("Ingr" + i));
-		    			}
-		    		}
-		    	}
 
 		    	if(!ModUtils.hasWawla()){
 			    	if(itemstack.getItem() instanceof UniversalBucket){
@@ -253,10 +130,6 @@ public class GlobbyEventHandler {
 						}
 		    		}
 		    	}
-			}else {
-				if(itemstack.isItemEqual(BaseRecipes.sampling_ampoule)){
-					itemstack.setTagCompound(new NBTTagCompound());
-				}
 			}
 		}
 	}
